@@ -3,22 +3,23 @@ const { network, ethers } = require('hardhat');
 const { BigNumber, utils } = require('ethers');
 const { writeFile } = require('fs');
 
-describe('Liquidation', function () {
-  it('test', async function () {
+describe('Liquidation(Question 3)', function () {
+  it('Liquidation test 0x63f6037d3e9d51ad865056BF7792029803b6eEfD', async function () {
     await network.provider.request({
       method: 'hardhat_reset',
       params: [
         {
           forking: {
             jsonRpcUrl: process.env.ALCHE_API,
-            blockNumber: 12489619,
+            blockNumber: 11946807,
           },
         },
       ],
     });
 
     const gasPrice = 0;
-
+    const debt = 8128.956343;
+    const debt_USDC_input = ethers.utils.parseUnits(debt.toString(), 6);
     const accounts = await ethers.getSigners();
     const liquidator = accounts[0].address;
 
@@ -30,7 +31,7 @@ describe('Liquidation', function () {
     );
 
     const LiquidationOperator = await ethers.getContractFactory(
-      'LiquidationOperator'
+      'LiquidationOperator3'
     );
     const liquidationOperator = await LiquidationOperator.deploy(
       (overrides = { gasPrice: gasPrice })
@@ -38,6 +39,7 @@ describe('Liquidation', function () {
     await liquidationOperator.deployed();
 
     const liquidationTx = await liquidationOperator.operate(
+      debt_USDC_input,
       (overrides = { gasPrice: gasPrice })
     );
     const liquidationReceipt = await liquidationTx.wait();
@@ -56,7 +58,7 @@ describe('Liquidation', function () {
     const expectedLiquidationEvents = liquidationReceipt.logs.filter(
       (v) =>
         v.topics[3] ===
-        '0x00000000000000000000000059ce4a2ac5bc3f5f225439b2993b86b42f6d3e9f'
+        '0x00000000000000000000000063f6037d3e9d51ad865056bf7792029803b6eefd'
     );
 
     expect(
@@ -81,5 +83,6 @@ describe('Liquidation', function () {
     writeFile('profit.txt', String(utils.formatEther(profit)), function (err) {
       console.log('failed to write profit.txt: %s', err);
     });
+    console.log('--------------------------------------------------');
   });
 });
